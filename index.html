@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studientracker 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0d0d1a;color:#e8e8f0;min-height:100vh;font-size:13px}
+button,input,select{font-family:inherit;cursor:pointer}
+input[type=number],input[type=date],input[type=text]{cursor:text}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+.tab-bar{display:flex;gap:2px;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto}
+.tab{padding:8px 11px;border:none;background:transparent;color:#8888aa;font-size:11px;font-weight:500;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;border-radius:8px 8px 0 0;white-space:nowrap}
+.tab.active{color:#fff;background:rgba(255,255,255,.07);border-bottom-color:#5b8dee}
+.page{padding:14px;display:none;animation:fadeIn .2s ease}.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 12px}
+.kpi-lbl{font-size:10px;color:#8888aa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.kpi-val{font-size:20px;font-weight:700;line-height:1}.kpi-sub{font-size:10px;color:#8888aa;margin-top:3px}
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mod-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 12px}
+.bar-wrap{height:7px;background:rgba(255,255,255,.08);border-radius:4px;position:relative;overflow:hidden;margin:5px 0}
+.bar-reg{position:absolute;top:0;left:0;height:100%;border-radius:4px;transition:width .4s}
+.bar-puf{position:absolute;top:0;height:100%;opacity:.6;transition:all .4s}
+.bar-sep{position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(255,255,255,.3);z-index:3}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day-cell{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:7px 5px;min-height:95px;position:relative}
+.day-cell.today{background:rgba(91,141,238,.1);border-color:rgba(91,141,238,.4)}
+.day-cell.off{opacity:.3}.day-cell.reduced{border-color:rgba(100,200,120,.35);background:rgba(100,200,120,.03)}
+.dn{font-size:8px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.06em}
+.dd{font-size:10px;color:#bbb;margin-bottom:4px}
+.pill{display:flex;justify-content:space-between;border-radius:20px;padding:2px 5px;margin-bottom:2px;font-size:8px;line-height:1.4}
+.pill.puf{border-width:1.5px;border-style:dashed}
+.pill.extra-pill{background:rgba(255,140,0,.2)!important;color:#ffaa33!important;border:1px solid rgba(255,140,0,.4)!important}
+.pill.overdue-pill{background:rgba(255,80,80,.18)!important;color:#ff6b6b!important;border:1px solid rgba(255,80,80,.35)!important}
+.pill.mathe-pill{background:rgba(120,200,100,.2)!important;color:#7dc860!important;border:1px solid rgba(120,200,100,.4)!important}
+.pill.reduced-tag{background:rgba(100,200,120,.12)!important;color:#5cb87a!important;border:1px solid rgba(100,200,120,.3)!important}
+.pn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph{font-weight:600;margin-left:3px;white-space:nowrap;font-family:'DM Mono',monospace}
+.day-tot{font-size:8px;color:#8888aa;border-top:1px solid rgba(255,255,255,.06);padding-top:3px;margin-top:3px;font-family:'DM Mono',monospace}
+.reduce-btn{position:absolute;top:4px;right:4px;padding:1px 5px;border-radius:4px;font-size:7px;border:none;cursor:pointer;font-weight:600;line-height:1.5}
+.reduce-btn.can{background:rgba(100,200,120,.15);color:#5cb87a;border:1px solid rgba(100,200,120,.3)}
+.reduce-btn.can:hover{background:rgba(100,200,120,.28)}
+.reduce-btn.active{background:rgba(100,200,120,.28);color:#4caf50;border:1px solid rgba(76,175,80,.5)}
+.reduce-btn.disabled{background:rgba(255,255,255,.04);color:#444;border:1px solid rgba(255,255,255,.07);cursor:default}
+.goal-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:13px 14px;margin-bottom:9px}
+.check-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);background:transparent;display:flex;align-items:center;justify-content:center;color:transparent;font-size:11px;font-weight:700;transition:all .2s;flex-shrink:0}
+.log-btn{padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#bbb;font-size:10px}
+.log-btn:hover{background:rgba(255,255,255,.09)}
+.icon-btn{padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8888aa;font-size:10px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:9px;white-space:nowrap}
+.badge-puf{background:rgba(255,183,0,.12);color:#FFB700;border:1px solid rgba(255,183,0,.25)}
+.badge-backlog{background:rgba(255,80,80,.12);color:#ff6b6b;border:1px solid rgba(255,80,80,.25)}
+.badge-ahead{background:rgba(76,175,80,.1);color:#4caf50;border:1px solid rgba(76,175,80,.2)}
+.badge-done{background:rgba(76,175,80,.1);color:#4caf50}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:#181828;border-radius:16px;padding:20px;width:100%;max-width:320px;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto}
+.m-label{font-size:11px;color:#8888aa;display:block;margin-bottom:5px}
+.m-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:14px;outline:none;margin-bottom:10px}
+.m-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#1a1a2e;color:#fff;font-size:13px;outline:none;margin-bottom:10px}
+.m-btns{display:flex;gap:8px;margin-top:6px}
+.m-cancel{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8888aa;font-size:12px}
+.m-save{flex:2;padding:10px;border-radius:8px;border:none;background:#5b8dee;color:#fff;font-size:12px;font-weight:600}
+.m-save:disabled{background:#2a2a3a;color:#555;cursor:default}
+.m-option-btn{width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#e8e8f0;font-size:13px;margin-bottom:8px;text-align:left;transition:all .15s}
+.m-option-btn:hover{background:rgba(255,255,255,.09)}
+.grp-lbl{font-size:10px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.nav-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.nav-btn{padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#ccc;font-size:13px}
+.nav-btn:hover{background:rgba(255,255,255,.09)}
+.today-btn{padding:5px 9px;border-radius:7px;border:1px solid rgba(91,141,238,.35);background:rgba(91,141,238,.12);color:#5b8dee;font-size:10px;font-weight:600}
+.wk-label{flex:1;text-align:center;font-size:13px;font-weight:500}
+.sec-title{font-size:10px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.mathe-card{background:rgba(120,200,100,.05);border:1px solid rgba(120,200,100,.2);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.overdue-card{background:rgba(255,80,80,.05);border:1px solid rgba(255,80,80,.2);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.puf-slider-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:rgba(255,183,0,.06);border:1px solid rgba(255,183,0,.2);border-radius:8px}
+.puf-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:rgba(255,183,0,.3);outline:none}
+.puf-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#FFB700;cursor:pointer}
+.tag-custom{background:rgba(170,100,255,.12);color:#cc88ff;border:1px solid rgba(170,100,255,.3);padding:1px 6px;border-radius:10px;font-size:8px}
+.sync-btn{padding:5px 10px;border-radius:7px;border:1px solid rgba(91,141,238,.3);background:rgba(91,141,238,.1);color:#5b8dee;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s}
+.sync-btn:hover{background:rgba(91,141,238,.2)}
+.sync-btn.syncing{color:#FFB700;border-color:rgba(255,183,0,.3);background:rgba(255,183,0,.08)}
+.sync-btn.error{color:#f07070;border-color:rgba(255,80,80,.3);background:rgba(255,80,80,.08)}
+.sync-btn.ok{color:#4caf50;border-color:rgba(76,175,80,.3);background:rgba(76,175,80,.08)}
+.overdue-row{display:flex;align-items:center;gap:10px;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;margin-bottom:7px}
+.dist-input{width:50px;padding:5px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none;font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+
+<div style="padding:16px 14px 0">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <h1 style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.5px">Studientracker</h1>
+      <span style="font-size:11px;color:#8888aa;font-family:'DM Mono',monospace">2026</span>
+    </div>
+    <button id="sync-btn" class="sync-btn" onclick="manualSync()">☁ Sync</button>
+  </div>
+  <p id="hdr-sub" style="font-size:11px;color:#8888aa;margin-bottom:12px">8.6. – 30.9.2026</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+  <button class="tab" onclick="showTab('plan',this)">📅 Plan</button>
+  <button class="tab" onclick="showTab('goals',this)">🎯 Ziele</button>
+  <button class="tab" onclick="showTab('overdue',this)">⚠ Überfällig<span id="overdue-badge" style="display:none;margin-left:4px;background:#f07070;color:#fff;border-radius:10px;padding:0 5px;font-size:9px"></span></button>
+  <button class="tab" onclick="showTab('mathe',this)">📐 Mathe</button>
+  <button class="tab" onclick="showTab('transfer',this)">🔄 Transfer</button>
+  <button class="tab" onclick="showTab('custom',this)">＋ Eigene</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="kpi-grid" id="kpis"></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px">
+      <span style="font-weight:500">Gesamtfortschritt</span>
+      <span id="prog-label" style="color:#8888aa;font-family:'DM Mono',monospace"></span>
+    </div>
+    <div class="bar-wrap" style="height:8px;overflow:hidden"><div id="main-bar" class="bar-reg" style="background:linear-gradient(90deg,#5b8dee,#a78bfa);width:0%"></div></div>
+  </div>
+  <div class="sec-title">Module</div>
+  <div class="mod-grid" id="mod-grid"></div>
+  <div class="card" style="margin-top:10px" id="tempo-card">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">Tagesaktuelle Tempo-Analyse</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+      <div><div style="font-size:10px;color:#8888aa;margin-bottom:3px">Geplant bis heute</div><div id="exp-h" style="font-size:20px;font-weight:700;color:#8888aa;font-family:'DM Mono',monospace">0h</div></div>
+      <div><div style="font-size:10px;color:#8888aa;margin-bottom:3px">Erledigt</div><div id="act-h" style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace">0h</div></div>
+    </div>
+    <div id="tempo-detail"></div>
+  </div>
+</div>
+
+<!-- PLAN -->
+<div id="page-plan" class="page">
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+    <span class="wk-label" id="wk-label"></span>
+    <button class="nav-btn" onclick="changeWeek(1)">›</button>
+    <button class="today-btn" onclick="goToday()">Heute</button>
+  </div>
+  <div id="reduce-counter" style="font-size:11px;color:#8888aa;margin-bottom:8px"></div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#8888aa"><div style="width:12px;height:8px;border-radius:2px;background:rgba(206,203,246,.7)"></div>Regulär</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#8888aa"><div style="width:12px;height:8px;border-radius:2px;background:rgba(206,203,246,.3);border:1px dashed #7F77DD"></div>Puffer</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#8888aa"><div style="width:12px;height:8px;border-radius:2px;background:rgba(100,200,120,.2);border:1px solid rgba(100,200,120,.4)"></div>Reduziert</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#8888aa"><div style="width:12px;height:8px;border-radius:2px;background:rgba(255,140,0,.2);border:1px solid rgba(255,140,0,.4)"></div>Extra</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#8888aa"><div style="width:12px;height:8px;border-radius:2px;background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.35)"></div>Überfällig</div>
+  </div>
+  <div class="week-grid" id="week-grid"></div>
+  <div id="week-total" style="font-size:11px;color:#8888aa;margin-top:6px"></div>
+</div>
+
+<!-- GOALS -->
+<div id="page-goals" class="page">
+  <p style="font-size:11px;color:#8888aa;margin-bottom:10px;line-height:1.5">Fortschritt pro Modul: geplante vs. tatsächliche Stunden, Rückstand und Vorsprung.</p>
+  <div id="goals-list"></div>
+</div>
+
+<!-- OVERDUE -->
+<div id="page-overdue" class="page">
+  <div class="overdue-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><div style="font-size:14px;font-weight:600;color:#ff6b6b">⚠ Überfällige Stunden</div><div style="font-size:11px;color:#8888aa;margin-top:2px">Stunden die gestern oder früher nicht eingetragen wurden</div></div>
+      <div id="overdue-total" style="font-size:22px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace">0h</div>
+    </div>
+    <div style="font-size:11px;color:#8888aa;margin-bottom:10px">Verteile Stunden auf Tage dieser Woche als Extra-Zeit. Am Wochenende werden verbleibende Stunden als Rückstand vermerkt (Puffer wird zuerst aufgebraucht).</div>
+    <div id="overdue-list"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">📅 Verteilung auf diese Woche</div>
+    <div id="overdue-distribute"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">⭐ Bonus-Stunden eintragen</div>
+    <p style="font-size:11px;color:#8888aa;margin-bottom:10px">Bonus-Stunden gleichen Rückstände aus oder bauen Vorsprung auf.</p>
+    <div style="display:flex;gap:8px">
+      <select class="m-select" id="bonus-mod" style="margin-bottom:0;flex:2"></select>
+      <input class="m-input" type="number" id="bonus-h" min="0.5" step="0.5" placeholder="h" style="margin-bottom:0;flex:1;width:auto">
+      <button onclick="addBonus()" style="padding:10px 14px;border-radius:8px;border:none;background:#5b8dee;color:#fff;font-size:12px;font-weight:600">＋</button>
+    </div>
+    <div id="bonus-list" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">📋 Vermerkte Rückstände (vergangene Wochen)</div>
+    <div id="backlog-list"></div>
+  </div>
+</div>
+
+<!-- MATHE -->
+<div id="page-mathe" class="page">
+  <div class="mathe-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div><div style="font-size:14px;font-weight:600;color:#7dc860">📐 Mathe-Konto</div><div style="font-size:11px;color:#8888aa;margin-top:2px">Flexibel, unabhängig vom Plan</div></div>
+      <div style="text-align:right"><div id="mathe-total" style="font-size:22px;font-weight:700;color:#7dc860;font-family:'DM Mono',monospace">0h</div><div style="font-size:10px;color:#8888aa">Gesamt</div></div>
+    </div>
+    <button onclick="openMatheModal()" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(120,200,100,.4);background:rgba(120,200,100,.1);color:#7dc860;font-size:13px;font-weight:600">+ Mathe-Stunden eintragen</button>
+  </div>
+  <div id="mathe-log"></div>
+</div>
+
+<!-- TRANSFER -->
+<div id="page-transfer" class="page">
+  <p style="font-size:11px;color:#8888aa;margin-bottom:12px">Übertrage Stunden zwischen Modulen.</p>
+  <button onclick="openTransferModal()" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(91,141,238,.4);background:rgba(91,141,238,.1);color:#5b8dee;font-size:13px;font-weight:600;margin-bottom:14px">🔄 Neue Übertragung</button>
+  <div id="transfer-log"></div>
+</div>
+
+<!-- CUSTOM -->
+<div id="page-custom" class="page">
+  <p style="font-size:11px;color:#8888aa;margin-bottom:12px">Eigene Projekte und Budgetkorrekturen.</p>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button onclick="openNewProjectModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(170,100,255,.4);background:rgba(170,100,255,.1);color:#cc88ff;font-size:12px;font-weight:600">＋ Neues Projekt</button>
+    <button onclick="openAddHoursModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,183,0,.4);background:rgba(255,183,0,.08);color:#FFB700;font-size:12px;font-weight:600">＋ Stunden hinzufügen</button>
+  </div>
+  <div id="custom-projects-list"></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div id="modal-title" style="font-size:15px;font-weight:600;margin-bottom:3px">Stunden loggen</div>
+    <div id="modal-sub" style="font-size:11px;color:#8888aa;margin-bottom:12px"></div>
+    <input class="m-input" type="number" id="log-input" min="0.5" max="12" step="0.5" placeholder="z.B. 3">
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal()">Abbrechen</button>
+      <button class="m-save" id="save-btn" onclick="doLog()" disabled>Speichern</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="mathe-modal" onclick="if(event.target===this)closeMatheModal()">
+  <div class="modal"><div id="mm-content"></div></div>
+</div>
+<div class="modal-bg" id="transfer-modal" onclick="if(event.target===this)closeTransferModal()">
+  <div class="modal"><div id="tm-content"></div></div>
+</div>
+<div class="modal-bg" id="project-modal" onclick="if(event.target===this)closeProjectModal()">
+  <div class="modal"><div id="pm-content"></div></div>
+</div>
+<div class="modal-bg" id="addhours-modal" onclick="if(event.target===this)closeAddHoursModal()">
+  <div class="modal"><div id="ah-content"></div></div>
+</div>
+
+<script>
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const FREE=new Set(["2026-06-12","2026-06-14","2026-06-21","2026-06-27","2026-06-28","2026-07-05","2026-07-12","2026-07-19","2026-07-21","2026-07-26","2026-08-02","2026-08-09","2026-08-16","2026-08-23","2026-08-30","2026-09-06","2026-09-11","2026-09-12","2026-09-13","2026-09-20","2026-09-27"]);
+const DNS=["So","Mo","Di","Mi","Do","Fr","Sa"];
+function addD(iso,n){const d=new Date(iso);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function todayIso(){return new Date().toISOString().slice(0,10);}
+function yesterdayIso(){return addD(todayIso(),-1);}
+function fmtS(iso){const[,m,d]=iso.split("-");return`${+d}.${+m}.`;}
+function fmtL(iso){if(!iso)return"–";const[y,m,d]=iso.split("-");return`${+d}.${+m}.${y}`;}
+function isWorkday(iso){if(FREE.has(iso))return false;return new Date(iso).getDay()!==0;}
+function reduce70(h){return Math.max(0.5,Math.round(h*.7*2)/2);}
+function getWeekMon(iso){const d=new Date(iso);const dw=d.getDay();const di=dw===0?-6:1-dw;d.setDate(d.getDate()+di);return d.toISOString().slice(0,10);}
+function getWeekSun(iso){return addD(getWeekMon(iso),6);}
+function fmtH(h){if(h===Math.floor(h))return h+"h";const m=Math.round((h%1)*60);return Math.floor(h)+"h"+(m>0?" "+m+"min":"");}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+const ALL_DAYS=[];const WORK_DAYS=[];
+{let d=new Date("2026-06-08"),e=new Date("2026-09-30");
+while(d<=e){const iso=d.toISOString().slice(0,10);ALL_DAYS.push(iso);if(isWorkday(iso))WORK_DAYS.push(iso);d.setDate(d.getDate()+1);}}
+
+// Task name → module id mapping
+const TASK_MOD={
+  "Aufarbeitung Logik":"s_auflogik","Aufarbeitung GEG":"s_aufgeg",
+  "Logik":"s_logik","Gibt es Gott":"s_geg","VN Logik":"s_vnlogik","VN GEG":"s_vngeg",
+  "Klausurvorbereitung":"s_klausur","Kolloquium":"kolloquium","Abgabe GEG 1":"geg1",
+  "Forschungsprojekt":"forschung","Puffer Forschungsprojekt":"forschung",
+  "Digital Sales":"ds","Puffer Digital Sales":"ds","Abgabe GEG 2":"geg2",
+  "Personal Branding":"pb","Puffer Personal Branding":"pb",
+  "Social Media":"sm","Puffer Social Media":"sm",
+  "Modul 1":"m1","Puffer M1":"m1","Modul 2":"m2","Puffer M2":"m2",
+  "Modul 3":"m3","Puffer M3":"m3","Modul 4":"m4","Puffer M4":"m4","Bachelorarbeit":"ba",
+};
+
+// ─── FIXED SCHEDULE ───────────────────────────────────────────────────────────
+const FS={
+  "2026-06-08":[["Aufarbeitung Logik",3,0],["Aufarbeitung GEG",4,0]],
+  "2026-06-09":[["Logik",3,0],["Kolloquium",4,0]],
+  "2026-06-10":[["Aufarbeitung Logik",3,0],["Kolloquium",4,0]],
+  "2026-06-11":[["Logik",3,0],["Gibt es Gott",3,0],["VN Logik",3,0]],
+  "2026-06-12":[],"2026-06-13":[["Aufarbeitung Logik",3,0],["Kolloquium",4,0]],
+  "2026-06-15":[["Aufarbeitung Logik",3,0],["Aufarbeitung GEG",1,0]],
+  "2026-06-16":[["Logik",3,0],["Kolloquium",4,0]],"2026-06-17":[["Kolloquium",7,0]],
+  "2026-06-18":[["Logik",3,0],["Gibt es Gott",3,0],["VN Logik",3,0]],
+  "2026-06-19":[["VN GEG",3,0],["Kolloquium",4,0]],"2026-06-20":[["Kolloquium",7,0]],
+  "2026-06-22":[["Abgabe GEG 1",3,0],["Kolloquium",4,0]],
+  "2026-06-23":[["Logik",3,0],["Kolloquium",4,0]],
+  "2026-06-24":[["Abgabe GEG 1",4,0],["Kolloquium",3,0]],
+  "2026-06-25":[["Logik",3,0],["Gibt es Gott",3,0],["VN Logik",3,0]],
+  "2026-06-26":[["Kolloquium",4,0],["Abgabe GEG 1",4,0]],"2026-06-27":[],
+  "2026-06-29":[["VN GEG",2,0],["Forschungsprojekt",4,0],["Digital Sales",2,0]],
+  "2026-06-30":[["Logik",3,0],["Forschungsprojekt",4,0]],
+  "2026-07-01":[["Forschungsprojekt",4,0],["Digital Sales",3,0]],
+  "2026-07-02":[["Logik",3,0],["Gibt es Gott",3,0],["VN Logik",3,0]],
+  "2026-07-03":[["VN GEG",3,0],["Forschungsprojekt",4,0]],
+  "2026-07-04":[["Forschungsprojekt",4,0],["Digital Sales",3,0]],
+  "2026-07-06":[["Klausurvorbereitung",2,0],["Forschungsprojekt",5,0]],
+  "2026-07-07":[["Logik",3,0],["Digital Sales",4,0]],
+  "2026-07-08":[["Klausurvorbereitung",2,0],["Digital Sales",2,0],["Forschungsprojekt",4,0]],
+  "2026-07-09":[["Logik",3,0],["Gibt es Gott",3,0],["Forschungsprojekt",2,0]],
+  "2026-07-10":[["Klausurvorbereitung",4,0],["VN GEG",3,0]],
+  "2026-07-11":[["Klausurvorbereitung",4,0],["Digital Sales",3,0]],
+  "2026-07-13":[["Klausurvorbereitung",4,0],["Forschungsprojekt",3,0]],
+  "2026-07-14":[["Logik",3,0],["Digital Sales",4,0]],
+  "2026-07-15":[["Klausurvorbereitung",2,0],["Digital Sales",3,0],["Puffer Forschungsprojekt",2,1]],
+  "2026-07-16":[["Logik",3,0],["Gibt es Gott",3,0]],
+  "2026-07-17":[["Klausurvorbereitung",4,0],["VN GEG",3,0]],
+  "2026-07-18":[["Klausurvorbereitung",4,0],["Digital Sales",3,0]],
+  "2026-07-20":[["Klausurvorbereitung",8,0]],"2026-07-21":[],
+  "2026-07-22":[["Digital Sales",3,0],["Abgabe GEG 2",4,0]],
+  "2026-07-23":[["Digital Sales",3,0],["Abgabe GEG 2",4,0]],
+  "2026-07-24":[["Abgabe GEG 2",8,0]],
+  "2026-07-25":[["Abgabe GEG 2",4,0],["Puffer Forschungsprojekt",4,1]],
+  "2026-07-27":[["Abgabe GEG 2",4,0],["Puffer Forschungsprojekt",4,1]],
+  "2026-07-28":[["Abgabe GEG 2",4,0],["Puffer Digital Sales",4,1]],
+  "2026-07-29":[["Personal Branding",4,0],["Puffer Digital Sales",4,1]],
+  "2026-07-30":[["Personal Branding",7,0]],"2026-07-31":[["Personal Branding",7,0]],
+  "2026-08-01":[["Personal Branding",4,0],["Social Media",3,0]],
+  "2026-08-03":[["Personal Branding",4,0],["Social Media",3,0]],
+  "2026-08-04":[["Personal Branding",3,0],["Social Media",4,0]],
+  "2026-08-05":[["Personal Branding",4,0],["Social Media",3,0]],
+  "2026-08-06":[["Social Media",4,0],["Puffer Personal Branding",3,1]],
+  "2026-08-07":[["Social Media",4,0],["Puffer Personal Branding",3,1]],
+  "2026-08-08":[["Social Media",4,0],["Puffer Personal Branding",3,1]],
+  "2026-08-10":[["Social Media",2,0],["Puffer Social Media",5,1]],
+  "2026-08-11":[["Puffer Social Media",5,1],["Bachelorarbeit",2,0]],
+  "2026-08-12":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-13":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-14":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-15":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-17":[["Modul 1",3,0],["Modul 2",4,0]],
+  "2026-08-18":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-19":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-20":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-21":[["Modul 1",3,0],["Modul 2",4,0]],
+  "2026-08-22":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-24":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-25":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-26":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-27":[["Modul 1",3,0],["Modul 2",4,0]],
+  "2026-08-28":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-29":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-08-31":[["Modul 1",2,0],["Modul 2",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-01":[["Modul 1",1,0],["Modul 2",2,0],["Puffer M1",2,1],["Puffer M2",2,1]],
+  "2026-09-02":[["Puffer M1",2,1],["Puffer M2",2,1],["Bachelorarbeit",3,0]],
+  "2026-09-03":[["Puffer M1",2,1],["Puffer M2",2,1],["Bachelorarbeit",3,0]],
+  "2026-09-04":[["Puffer M1",2,1],["Puffer M2",2,1],["Bachelorarbeit",3,0]],
+  "2026-09-05":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-07":[["Modul 3",3,0],["Modul 4",4,0]],
+  "2026-09-08":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-09":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-10":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-14":[["Modul 3",3,0],["Modul 4",4,0]],
+  "2026-09-15":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-16":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-17":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-18":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-19":[["Modul 3",3,0],["Modul 4",4,0]],
+  "2026-09-21":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-22":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-23":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-24":[["Modul 3",3,0],["Modul 4",4,0]],
+  "2026-09-25":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-26":[["Modul 3",2,0],["Modul 4",2,0],["Bachelorarbeit",3,0]],
+  "2026-09-28":[["Puffer M3",2,1],["Puffer M4",2,1],["Bachelorarbeit",3,0]],
+  "2026-09-29":[["Puffer M3",2,1],["Puffer M4",2,1],["Bachelorarbeit",3,0]],
+  "2026-09-30":[["Puffer M3",3,1],["Puffer M4",4,1]],
+};
+const SC={
+  "Aufarbeitung Logik":["#AFA9EC","#26215C"],"Aufarbeitung GEG":["#FAC775","#412402"],
+  "Logik":["#EEEDFE","#3C3489"],"Gibt es Gott":["#FAEEDA","#633806"],
+  "VN Logik":["#C0DD97","#173404"],"VN GEG":["#9FE1CB","#04342C"],
+  "Klausurvorbereitung":["#F7C1C1","#501313"],"Kolloquium":["#B5D4F4","#042C53"],
+  "Abgabe GEG 1":["#F0997B","#4A1B0C"],"Forschungsprojekt":["#D3D1C7","#2C2C2A"],
+  "Puffer Forschungsprojekt":["#888780","#F1EFE8"],"Digital Sales":["#F4C0D1","#4B1528"],
+  "Puffer Digital Sales":["#D4537E","#FBEAF0"],"Abgabe GEG 2":["#D85A30","#FAECE7"],
+  "Personal Branding":["#5DCAA5","#04342C"],"Puffer Personal Branding":["#0F6E56","#DEF5ED"],
+  "Social Media":["#1D9E75","#E1F5EE"],"Puffer Social Media":["#085041","#DEF5ED"],
+  "Modul 1":["#CECBF6","#26215C"],"Puffer M1":["#7F77DD","#EEEDFE"],
+  "Modul 2":["#C0DD97","#173404"],"Puffer M2":["#639922","#EAF3DE"],
+  "Modul 3":["#FAC775","#412402"],"Puffer M3":["#BA7517","#FAEEDA"],
+  "Modul 4":["#F5C4B3","#4A1B0C"],"Puffer M4":["#993C1D","#FAECE7"],
+  "Bachelorarbeit":["#378ADD","#E6F1FB"],
+};
+
+// ─── MODULES ──────────────────────────────────────────────────────────────────
+const MODS=[
+  {id:"s_auflogik",name:"Aufarbeitung Logik",reg:12,puf:0,dl:"2026-07-07",col:"#AFA9EC",tc:"#26215C",grp:"static"},
+  {id:"s_aufgeg",name:"Aufarbeitung GEG",reg:5,puf:0,dl:"2026-07-09",col:"#FAC775",tc:"#412402",grp:"static"},
+  {id:"s_logik",name:"Logik",reg:36,puf:0,dl:"2026-07-20",col:"#EEEDFE",tc:"#3C3489",grp:"static"},
+  {id:"s_geg",name:"Gibt es Gott",reg:18,puf:0,dl:"2026-07-20",col:"#FAEEDA",tc:"#633806",grp:"static"},
+  {id:"s_vnlogik",name:"VN Logik",reg:12,puf:0,dl:"2026-07-02",col:"#C0DD97",tc:"#173404",grp:"static"},
+  {id:"s_vngeg",name:"VN GEG",reg:14,puf:0,dl:"2026-07-17",col:"#9FE1CB",tc:"#04342C",grp:"static"},
+  {id:"s_klausur",name:"Klausurvorbereitung",reg:34,puf:0,dl:"2026-07-20",col:"#F7C1C1",tc:"#501313",grp:"static"},
+  {id:"kolloquium",name:"Kolloquium",reg:49,puf:0,dl:"2026-06-26",col:"#B5D4F4",tc:"#042C53",grp:"b1"},
+  {id:"geg1",name:"Abgabe GEG 1",reg:11,puf:0,dl:"2026-06-26",col:"#F0997B",tc:"#4A1B0C",grp:"b1"},
+  {id:"forschung",name:"Forschungsprojekt",reg:34,puf:10,dl:"2026-08-05",col:"#D3D1C7",tc:"#2C2C2A",grp:"b1"},
+  {id:"ds",name:"Digital Sales",reg:33,puf:8,dl:"2026-08-05",col:"#F4C0D1",tc:"#4B1528",grp:"b1"},
+  {id:"geg2",name:"Abgabe GEG 2",reg:28,puf:0,dl:"2026-07-24",col:"#D85A30",tc:"#FFF",grp:"b1"},
+  {id:"pb",name:"Personal Branding",reg:33,puf:9,dl:"2026-08-05",col:"#5DCAA5",tc:"#04342C",grp:"b1"},
+  {id:"sm",name:"Social Media",reg:27,puf:10,dl:"2026-08-05",col:"#1D9E75",tc:"#E1F5EE",grp:"b1"},
+  {id:"m1",name:"Modul 1",reg:40,puf:8,dl:null,col:"#CECBF6",tc:"#26215C",grp:"b2"},
+  {id:"m2",name:"Modul 2",reg:40,puf:8,dl:null,col:"#C0DD97",tc:"#173404",grp:"b2"},
+  {id:"m3",name:"Modul 3",reg:40,puf:8,dl:null,col:"#FAC775",tc:"#412402",grp:"b2"},
+  {id:"m4",name:"Modul 4",reg:40,puf:8,dl:null,col:"#F5C4B3",tc:"#4A1B0C",grp:"b2"},
+  {id:"ba",name:"Bachelorarbeit",reg:96,puf:0,dl:"2026-09-30",col:"#378ADD",tc:"#E6F1FB",grp:"b2"},
+];
+let M=Object.fromEntries(MODS.map(m=>[m.id,m]));
+
+// ─── CLOUD SYNC (JSONBin) ─────────────────────────────────────────────────────
+// ⚙️  Update this key if you regenerate on JSONBin:
+const JBKEY="$2a$10$2lxH.9zQo5KwOWsGWGQ7SebDalr8LAAKWfPyHXcOorLUlLrRKUp0i";
+const JBBASE="https://api.jsonbin.io/v3/b";
+let jbId=localStorage.getItem("st26_binId")||null;
+
+function setSyncUI(state){
+  const btn=document.getElementById("sync-btn");
+  if(!btn)return;
+  const map={idle:["☁ Sync",""],syncing:["⟳ Sync…","syncing"],ok:["✓ Gespeichert","ok"],error:["⚠ Sync-Fehler","error"]};
+  const[txt,cls]=map[state]||["☁ Sync",""];
+  btn.textContent=txt;
+  btn.className="sync-btn"+(cls?" "+cls:"");
+}
+
+async function cloudPush(){
+  setSyncUI("syncing");
+  try{
+    const body=JSON.stringify(prog);
+    if(!jbId){
+      const r=await fetch(JBBASE,{method:"POST",headers:{"Content-Type":"application/json","X-Master-Key":JBKEY,"X-Bin-Name":"Studientracker2026","X-Bin-Private":"true"},body});
+      if(!r.ok)throw new Error(await r.text());
+      const j=await r.json();jbId=j.metadata.id;localStorage.setItem("st26_binId",jbId);
+    }else{
+      const r=await fetch(`${JBBASE}/${jbId}`,{method:"PUT",headers:{"Content-Type":"application/json","X-Master-Key":JBKEY},body});
+      if(!r.ok)throw new Error(await r.text());
+    }
+    setSyncUI("ok");setTimeout(()=>setSyncUI("idle"),3000);
+  }catch(e){console.error("Push error:",e);setSyncUI("error");}
+}
+
+async function cloudPull(){
+  if(!jbId)return null;
+  setSyncUI("syncing");
+  try{
+    const r=await fetch(`${JBBASE}/${jbId}/latest`,{headers:{"X-Master-Key":JBKEY}});
+    if(!r.ok)throw new Error(await r.text());
+    const j=await r.json();setSyncUI("ok");setTimeout(()=>setSyncUI("idle"),3000);return j.record;
+  }catch(e){console.error("Pull error:",e);setSyncUI("error");return null;}
+}
+
+async function manualSync(){
+  // Pull from cloud; if cloud has data merge it (take whichever has more logged hours)
+  const cloud=await cloudPull();
+  if(cloud&&typeof cloud==="object"){
+    const localH=Object.values(prog).reduce((s,v)=>s+(v?.hoursLogged||0),0);
+    const cloudH=Object.values(cloud).reduce((s,v)=>s+(v?.hoursLogged||0),0);
+    if(cloudH>localH){
+      prog=cloud;
+      if(!prog.reducedDays)prog.reducedDays=[];if(!prog.matheEntries)prog.matheEntries=[];
+      if(!prog.transfers)prog.transfers=[];if(!prog.customProjects)prog.customProjects=[];
+      if(!prog.extraTimes)prog.extraTimes=[];if(!prog.weeklyReckoning)prog.weeklyReckoning=[];
+      if(!prog.bonusHours)prog.bonusHours=[];
+      localStorage.setItem("st26v8",JSON.stringify(prog));rebuildM();render();
+    }else{
+      // Local is newer — push to cloud
+      await cloudPush();
+    }
+  }else{
+    // No cloud data yet — push
+    await cloudPush();
+  }
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+// prog[id] = {hoursLogged, done, pufActive, pufActivated, extended, extraReg, extraPuf}
+// prog.reducedDays = ["2026-06-09", ...]
+// prog.matheEntries = [{id,date,hours,mode,replacedTask,replacedHours}]
+// prog.transfers = [{id,from,to,hours,type,date}]
+// prog.customProjects = [{id,name,col,tc,reg,puf,dl}]
+// prog.extraTimes = [{id,targetDate,hours,label}]  ← user-distributed overdue hours
+// prog.weeklyReckoning = [{id,weekMon,moduleId,backlogH,pufferUsedH}]  ← frozen weekly deficits
+// prog.bonusHours = [{id,moduleId,hours,date}]
+
+let prog=JSON.parse(localStorage.getItem("st26v8")||"{}");
+function ensureArrays(){
+  if(!prog.reducedDays)prog.reducedDays=[];
+  if(!prog.matheEntries)prog.matheEntries=[];
+  if(!prog.transfers)prog.transfers=[];
+  if(!prog.customProjects)prog.customProjects=[];
+  if(!prog.extraTimes)prog.extraTimes=[];
+  if(!prog.weeklyReckoning)prog.weeklyReckoning=[];
+  if(!prog.bonusHours)prog.bonusHours=[];
+}
+ensureArrays();
+
+function rebuildM(){
+  M=Object.fromEntries(MODS.map(m=>[m.id,m]));
+  for(const p of prog.customProjects)M[p.id]={...p,grp:"custom"};
+}
+rebuildM();
+
+let wkOff=0,modalId=null;
+const TODAY=todayIso();
+const YESTERDAY=yesterdayIso();
+
+function saveProg(){
+  localStorage.setItem("st26v8",JSON.stringify(prog));rebuildM();
+}
+
+// ─── REDUCTION ────────────────────────────────────────────────────────────────
+function reductionsThisWeek(iso){const mon=getWeekMon(iso);return prog.reducedDays.filter(d=>getWeekMon(d)===mon).length;}
+function isReduced(iso){return prog.reducedDays.includes(iso);}
+function canReduce(iso){return !isReduced(iso)&&reductionsThisWeek(iso)<3;}
+function toggleReduction(iso){
+  const rd=[...prog.reducedDays];const idx=rd.indexOf(iso);
+  if(idx>=0)rd.splice(idx,1);else if(canReduce(iso))rd.push(iso);
+  prog={...prog,reducedDays:rd};saveProg();render();
+}
+function reduce70(h){return Math.max(0.5,Math.round(h*.7*2)/2);}
+
+// ─── EFFECTIVE BUDGET ─────────────────────────────────────────────────────────
+function effectiveBudget(id){
+  const base=M[id];if(!base)return{reg:0,puf:0};
+  let reg=base.reg+(prog[id]?.extraReg||0);
+  let puf=base.puf+(prog[id]?.extraPuf||0);
+  for(const t of prog.transfers){
+    if(t.from===id){if(t.type==="reg")reg-=t.hours;else puf-=t.hours;}
+    if(t.to===id){if(t.type==="reg")reg+=t.hours;else puf+=t.hours;}
+  }
+  return{reg:Math.max(0,reg),puf:Math.max(0,puf)};
+}
+
+// ─── SCHEDULED HOURS PER MODULE (accounting for reductions) ──────────────────
+// Returns hours scheduled for a module up to and including 'upToIso'
+function scheduledHoursForModule(modId, upToIso){
+  let total=0;
+  for(const iso of ALL_DAYS){
+    if(iso>upToIso)break;
+    const tasks=FS[iso]||[];
+    const reduced=isReduced(iso);
+    for(const[t,h]of tasks){
+      if(TASK_MOD[t]===modId){
+        total+=reduced?reduce70(h):h;
+      }
+    }
+  }
+  return total;
+}
+
+// Total scheduled hours for a module up to yesterday
+function scheduledUpToYesterday(modId){return scheduledHoursForModule(modId,YESTERDAY);}
+
+// ─── OVERDUE POOL ─────────────────────────────────────────────────────────────
+// Live deficit per module = max(0, scheduledUpToYesterday - logged - bonusApplied)
+// This is BEFORE weekly reckoning adjustment
+function liveDeficitForModule(modId){
+  const scheduled=scheduledUpToYesterday(modId);
+  const logged=(prog[modId]?.hoursLogged||0);
+  const bonusH=prog.bonusHours.filter(b=>b.moduleId===modId).reduce((s,b)=>s+b.hours,0);
+  const frozenBacklog=prog.weeklyReckoning.filter(r=>r.moduleId===modId).reduce((s,r)=>s+r.backlogH,0);
+  // deficit = what was planned but not logged
+  // subtract frozen backlog (already processed) and bonus
+  const raw=Math.max(0,scheduled-logged);
+  return Math.max(0,raw-frozenBacklog-bonusH);
+}
+
+function totalOverdueHours(){
+  return Object.keys(M).reduce((s,id)=>s+liveDeficitForModule(id),0);
+}
+
+// Extra times distributed on a specific day
+function extraTimesOnDay(iso){
+  return prog.extraTimes.filter(e=>e.targetDate===iso).reduce((s,e)=>s+e.hours,0);
+}
+
+// ─── WEEKLY RECKONING (called at week boundary) ────────────────────────────────
+function processWeeklyReckoning(){
+  const now=new Date(TODAY);
+  // Check if today is Monday — if so, process last week
+  if(now.getDay()!==1)return; // only run on Monday
+  const lastWeekMon=addD(TODAY,-7);
+  const lastWeekSun=addD(TODAY,-1);
+  // Already processed this week?
+  if(prog.weeklyReckoning.some(r=>r.weekMon===lastWeekMon))return;
+  // Process each module
+  for(const id of Object.keys(M)){
+    const deficit=liveDeficitForModule(id);
+    if(deficit<=0)continue;
+    const{puf}=effectiveBudget(id);
+    const p=prog[id]||{};
+    const pufUsed=Math.max(0,p.hoursLogged||0)>0?Math.max(0,(p.hoursLogged||0)-(M[id]?.reg||0)):0;
+    const pufRemaining=Math.max(0,puf-pufUsed-(prog[id]?.pufActivated||0));
+    let backlogH=deficit;
+    let pufferUsedH=0;
+    if(pufRemaining>0){
+      pufferUsedH=Math.min(deficit,pufRemaining);
+      backlogH=Math.max(0,deficit-pufferUsedH);
+      // Mark puffer as used
+      const p2=prog[id]||{};
+      prog={...prog,[id]:{...p2,pufActivated:(p2.pufActivated||0)+pufferUsedH,pufActive:true}};
+    }
+    if(backlogH>0){
+      prog.weeklyReckoning=[...prog.weeklyReckoning,{id:uid(),weekMon:lastWeekMon,moduleId:id,backlogH,pufferUsedH}];
+    }
+  }
+  saveProg();
+}
+
+// Total backlog per module (from weekly reckoning)
+function backlogForModule(modId){
+  return prog.weeklyReckoning.filter(r=>r.moduleId===modId).reduce((s,r)=>s+r.backlogH,0);
+}
+// Total bonus hours for module
+function bonusForModule(modId){
+  return prog.bonusHours.filter(b=>b.moduleId===modId).reduce((s,b)=>s+b.hours,0);
+}
+
+// ─── MATHE ────────────────────────────────────────────────────────────────────
+function matheTotal(){return prog.matheEntries.reduce((s,e)=>s+e.hours,0);}
+function matheOnDay(iso){return prog.matheEntries.filter(e=>e.date===iso).reduce((s,e)=>s+e.hours,0);}
+function matheOverridesOnDay(iso){
+  const out={};
+  for(const e of prog.matheEntries)
+    if(e.date===iso&&e.mode==="ersatz"&&e.replacedTask)
+      out[e.replacedTask]=(out[e.replacedTask]||0)+e.replacedHours;
+  return out;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  processWeeklyReckoning();
+  renderDashboard();renderPlan();renderGoals();renderOverdue();renderMathe();renderTransfer();renderCustom();
+  // Update overdue badge
+  const total=totalOverdueHours();
+  const badge=document.getElementById("overdue-badge");
+  if(badge){if(total>0){badge.textContent=`${total}h`;badge.style.display="";}else badge.style.display="none";}
+}
+
+function renderDashboard(){
+  const dynMods=Object.values(M).filter(m=>m.grp!=="static");
+  let totP=0,totD=0;
+  for(const m of dynMods){
+    const p=prog[m.id]||{};const{reg,puf}=effectiveBudget(m.id);const tot=reg+puf;
+    const d=p.done?tot:Math.min(p.hoursLogged||0,tot);totP+=tot;totD+=d;
+  }
+  const pct=totP>0?Math.round(totD/totP*100):0;
+  document.getElementById("hdr-sub").textContent=`8.6. – 30.9.2026 · ${pct}% abgeschlossen`;
+  document.getElementById("prog-label").textContent=`${totD}h / ${totP}h`;
+  document.getElementById("main-bar").style.width=pct+"%";
+
+  // Tempo
+  let planned=0,actual=0;
+  for(const m of Object.values(M)){
+    planned+=scheduledHoursForModule(m.id,TODAY);
+    actual+=(prog[m.id]?.hoursLogged||0)+bonusForModule(m.id);
+  }
+  const diff=actual-planned;
+  document.getElementById("exp-h").textContent=planned+"h";
+  const ae=document.getElementById("act-h");ae.textContent=actual+"h";ae.style.color=diff>=0?"#4caf50":"#f07070";
+  const td=document.getElementById("tempo-detail");
+  let tdHtml="";
+  if(diff>0) tdHtml=`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);font-size:11px;color:#7dd87d">✓ ${diff}h vor dem Plan</div>`;
+  else if(diff<0) tdHtml=`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.2);font-size:11px;color:#ff6b6b">⚠ ${Math.abs(diff)}h hinter dem Plan → sieh "Überfällig" Tab</div>`;
+  else tdHtml=`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);font-size:11px;color:#7dd87d">✓ Exakt im Plan</div>`;
+  td.innerHTML=tdHtml;
+
+  document.getElementById("kpis").innerHTML=[
+    {l:"Fortschritt",v:pct+"%",s:`${totD}h / ${totP}h`,c:"#5b8dee"},
+    {l:"Tempo",v:diff===0?"Im Plan":diff>0?`+${diff}h`:`${diff}h`,s:diff>0?"Vorsprung ✓":diff<0?"Rückstand":"im Plan",c:diff>=0?"#4caf50":"#f07070"},
+    {l:"Überfällig",v:`${totalOverdueHours()}h`,s:"im Pool",c:totalOverdueHours()>0?"#ff6b6b":"#4caf50"},
+  ].map(k=>`<div class="kpi"><div class="kpi-lbl">${k.l}</div><div class="kpi-val" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join("");
+
+  document.getElementById("mod-grid").innerHTML=Object.values(M).map(m=>{
+    const isS=m.grp==="static";const p=prog[m.id]||{};const logged=p.hoursLogged||0;
+    const{reg,puf}=effectiveBudget(m.id);const tot=reg+puf;
+    const pct2=tot>0?Math.round(Math.min(logged,tot)/tot*100):0;
+    const isDone=!isS&&(p.done||logged>=tot);
+    const rd=Math.min(logged,reg);const pd=Math.max(0,logged-reg);const rPct=tot>0?reg/tot*100:100;
+    return`<div class="mod-card" style="border-color:${isDone?m.col+"55":"rgba(255,255,255,.07)"}${isS?";opacity:.55":""}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:10px;font-weight:600;color:${m.col};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%">${m.name}</span>
+        <span style="font-size:8px;color:${isDone?"#4caf50":isS?"#555":"#8888aa"}">${isDone?"✓":isS?"fix":""}</span>
+      </div>
+      <div class="bar-wrap">${puf>0?`<div class="bar-sep" style="left:${rPct}%"></div>`:""}
+        <div class="bar-reg" style="width:${Math.min(rd/tot*100,rPct)}%;background:${m.col}"></div>
+        ${pd>0?`<div class="bar-puf" style="left:${rPct}%;width:${Math.min(pd/tot*100,100-rPct)}%;background:${m.col}"></div>`:""}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#8888aa">
+        <span style="font-family:'DM Mono',monospace">${logged}h/${reg}h${puf>0?` <span style="color:#FFB700aa">+${puf}p</span>`:""}</span>
+        <span style="color:${pct2>=100?"#4caf50":pct2>=50?"#FFB700":"#8888aa"}">${pct2}%</span>
+      </div></div>`;
+  }).join("");
+}
+
+function renderPlan(){
+  const mon=addD("2026-06-08",wkOff*7);
+  const days=Array.from({length:7},(_,i)=>addD(mon,i));
+  document.getElementById("wk-label").textContent=`${fmtS(days[0])} – ${fmtS(days[6])}`;
+  const usedR=reductionsThisWeek(mon);
+  document.getElementById("reduce-counter").innerHTML=`<span style="color:${usedR>=3?"#f07070":"#5cb87a"}">🌿 Tagesreduktion: ${usedR}/3 diese Woche</span>`;
+  let wkTot=0;
+  document.getElementById("week-grid").innerHTML=days.map(iso=>{
+    const dt=new Date(iso);const dw=dt.getDay();
+    const isSun=dw===0,isFree=FREE.has(iso),isToday=iso===TODAY;
+    const inR=iso>="2026-06-08"&&iso<="2026-09-30";
+    const baseTasks=FS[iso]||[];const reduced=isReduced(iso);
+    const overrides=matheOverridesOnDay(iso);const matheH=matheOnDay(iso);
+    const extraH=extraTimesOnDay(iso);
+    // Overdue: show on past days with deficit
+    const isPast=iso<TODAY;
+    const overdueH=isPast?Math.round(liveDeficitForModule("s_logik")*0):0; // shown differently
+    const dispTasks=[];
+    for(const[t,h,p]of baseTasks){
+      let dh=reduced?reduce70(h):h;
+      dh=Math.max(0,dh-(overrides[t]||0));
+      if(dh>0)dispTasks.push({t,h:dh,p,dim:(overrides[t]||0)>0});
+    }
+    const tot=dispTasks.reduce((s,x)=>s+x.h,0)+matheH+extraH;
+    if(!isFree&&!isSun&&inR)wkTot+=tot;
+    let redBtn="";
+    if(inR&&!isFree&&!isSun&&baseTasks.length>0){
+      if(reduced)redBtn=`<button class="reduce-btn active" onclick="toggleReduction('${iso}')">↑70%</button>`;
+      else if(canReduce(iso))redBtn=`<button class="reduce-btn can" onclick="toggleReduction('${iso}')">↓70%</button>`;
+      else redBtn=`<button class="reduce-btn disabled">↓70%</button>`;
+    }
+    const pills=dispTasks.map(x=>{const c=SC[x.t]||["#888","#eee"];return`<div class="pill${x.p?" puf":""}" style="background:${x.p?c[0]+"55":c[0]};color:${c[1]};${x.p?`border-color:${c[1]}`:""};opacity:${x.dim?.75:1}"><span class="pn">${x.t}</span><span class="ph">${fmtH(x.h)}</span></div>`;}).join("");
+    const mpill=matheH>0?`<div class="pill mathe-pill"><span class="pn">📐 Mathe</span><span class="ph">${matheH}h</span></div>`:"";
+    const epill=extraH>0?`<div class="pill extra-pill"><span class="pn">⚡ Extra</span><span class="ph">+${extraH}h</span></div>`:"";
+    const rpill=reduced?`<div class="pill reduced-tag"><span class="pn">🌿 70%</span></div>`:"";
+    return`<div class="day-cell ${isToday?"today":""} ${(isSun||isFree||!inR)?"off":""} ${reduced?"reduced":""}">
+      ${redBtn}<div class="dn">${DNS[dw]}</div>
+      <div class="dd" style="color:${isToday?"#5b8dee":"#bbb"};font-weight:${isToday?700:400}">${dt.getDate()}.${dt.getMonth()+1}.</div>
+      ${(isFree||isSun)&&inR?`<div style="font-size:8px;color:#555">${isFree?"Frei":"–"}</div>`:!inR?"":rpill+pills+mpill+epill}
+      ${!isFree&&!isSun&&inR&&tot>0?`<div class="day-tot">${fmtH(tot)}${tot>=9?" ⚠":tot>7?" ⚡":""}</div>`:""}
+    </div>`;
+  }).join("");
+  document.getElementById("week-total").textContent=`Wochengesamt: ${fmtH(wkTot)}`;
+}
+
+function renderGoals(){
+  let html="";
+  const groups=[
+    {key:"static",label:"Fixe Aktivitäten",sub:"Termine unveränderlich"},
+    {key:"b1",label:"Block 1",sub:"bis 11.8.2026"},
+    {key:"b2",label:"Block 2",sub:"ab 12.8.2026"},
+    {key:"custom",label:"Eigene Projekte",sub:"von dir erstellt"},
+  ];
+  for(const{key,label,sub}of groups){
+    const mods=Object.values(M).filter(x=>x.grp===key);if(!mods.length)continue;
+    html+=`<div class="grp-lbl">${label}<span style="font-size:9px;color:#555;font-weight:400">${sub}</span></div>`;
+    for(const m of mods){
+      const isS=key==="static";const p=prog[m.id]||{};const logged=p.hoursLogged||0;
+      const{reg,puf}=effectiveBudget(m.id);const tot=reg+puf;
+      const planned=scheduledHoursForModule(m.id,TODAY);
+      const bonus=bonusForModule(m.id);const backlog=backlogForModule(m.id);
+      const effective=logged+bonus;
+      const diff=effective-planned;
+      const isDone=!isS&&(p.done||logged>=tot);
+      const rd=Math.min(logged,reg);const pd=Math.max(0,logged-reg);const rPct=tot>0?reg/tot*100:100;
+      const pufActH=Math.max(pd,prog[m.id]?.pufActivated||0);
+      const pct2=tot>0?Math.round(Math.min(logged,tot)/tot*100):0;
+      let badge="";
+      if(!isS){
+        if(isDone) badge=`<span class="badge badge-done">✓ Fertig</span>`;
+        else if(diff<0) badge=`<span class="badge badge-backlog">−${Math.abs(diff)}h</span>`;
+        else if(diff>0) badge=`<span class="badge badge-ahead">+${diff}h</span>`;
+      }
+      html+=`<div class="goal-card" style="${isDone?`border-color:${m.col}44`:isS?"border-color:rgba(255,255,255,.04)":""}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          ${!isS?`<button class="check-btn" onclick="toggleDone('${m.id}')" style="${isDone?`background:${m.col};border-color:${m.col};color:${m.tc};`:""}font-size:11px;font-weight:700">${isDone?"✓":""}</button>`
+          :`<div style="width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:9px;color:#555;flex-shrink:0">🔒</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:${m.col};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
+            <div style="font-size:10px;color:#8888aa">${reg}h${puf>0?` + ${puf}h Puf`:""}${m.dl?` · bis ${fmtL(m.dl)}`:""}</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            ${badge}<button class="log-btn" onclick="openModal('${m.id}',${logged})">+ Std</button>
+          </div>
+        </div>
+        <div class="bar-wrap" style="margin-bottom:5px">${puf>0?`<div class="bar-sep" style="left:${rPct}%"></div>`:""}
+          <div class="bar-reg" style="width:${Math.min(rd/tot*100,rPct)}%;background:${m.col}"></div>
+          ${pd>0?`<div class="bar-puf" style="left:${rPct}%;width:${Math.min(pd/tot*100,100-rPct)}%;background:${m.col}"></div>`:""}
+        </div>
+        <div style="display:flex;gap:10px;font-size:9px;color:#8888aa;flex-wrap:wrap;margin-bottom:4px">
+          <span>Geplant bis heute: <b style="color:#ccc">${planned}h</b></span>
+          <span>Erledigt: <b style="color:#ccc">${effective}h</b></span>
+          ${backlog>0?`<span style="color:#ff6b6b">Rückstand: −${backlog}h</span>`:""}
+          ${bonus>0?`<span style="color:#4caf50">Bonus: +${bonus}h</span>`:""}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:9px;color:#8888aa">
+          <span style="font-family:'DM Mono',monospace">${rd}h/${reg}h${puf>0?" reg":""}</span>
+          ${puf>0?`<span style="color:${pd>0?"#FFB700":"#8888aa"};font-family:'DM Mono',monospace">${pd}h/${puf}h puf</span>`:""}
+          <span style="margin-left:auto;color:${pct2>=100?"#4caf50":pct2>=50?"#FFB700":"#8888aa"}">${pct2}%</span>
+        </div>
+        ${!isS&&puf>0?`<div class="puf-slider-row">
+          <span style="font-size:10px;color:#FFB700;white-space:nowrap">⚡ ${pufActH}/${puf}h aktiv</span>
+          <input type="range" class="puf-slider" min="0" max="${puf}" step="1" value="${pufActH}" oninput="setPufActivated('${m.id}',+this.value)">
+        </div>`:""}
+        ${isDone?`<div style="margin-top:7px;font-size:10px;color:#4caf50;background:rgba(76,175,80,.07);border-radius:6px;padding:5px 8px">✓ Fertig</div>`:""}
+        ${isS?`<div style="margin-top:5px;font-size:10px;color:#555">Termine fix · Fortschritt tracken.</div>`:""}
+      </div>`;
+    }
+  }
+  document.getElementById("goals-list").innerHTML=html;
+}
+
+function renderOverdue(){
+  const total=totalOverdueHours();
+  document.getElementById("overdue-total").textContent=total+"h";
+
+  // Per-module deficits
+  let listHtml="";
+  for(const m of Object.values(M)){
+    const def=liveDeficitForModule(m.id);
+    if(def<=0)continue;
+    listHtml+=`<div class="overdue-row">
+      <div style="width:10px;height:10px;border-radius:50%;background:${m.col};flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:500">${m.name}</div></div>
+      <div style="font-size:14px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace">${def}h</div>
+    </div>`;
+  }
+  document.getElementById("overdue-list").innerHTML=listHtml||`<div style="font-size:11px;color:#4caf50">✓ Keine überfälligen Stunden</div>`;
+
+  // Distribution panel: remaining days of current week
+  const mon=getWeekMon(TODAY);
+  const weekDays=Array.from({length:7},(_,i)=>addD(mon,i))
+    .filter(iso=>iso>=TODAY&&isWorkday(iso));
+  let distHtml="";
+  for(const iso of weekDays){
+    const existing=extraTimesOnDay(iso);
+    distHtml+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:12px;min-width:60px;color:#ccc">${fmtS(iso)} ${DNS[new Date(iso).getDay()]}</span>
+      <input class="dist-input" type="number" min="0" step="0.5" value="${existing||""}" placeholder="0h"
+        onchange="setExtraTime('${iso}',+this.value)">
+      <span style="font-size:10px;color:#8888aa">h Extra</span>
+      ${existing>0?`<span style="font-size:10px;color:#ffaa33">+${existing}h eingetragen</span>`:""}
+    </div>`;
+  }
+  document.getElementById("overdue-distribute").innerHTML=weekDays.length?distHtml:`<div style="font-size:11px;color:#8888aa">Keine weiteren Tage diese Woche</div>`;
+
+  // Bonus section: populate module select
+  const bonusMod=document.getElementById("bonus-mod");
+  if(bonusMod){
+    bonusMod.innerHTML=Object.values(M).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  }
+  // Bonus list
+  const bonuses=[...prog.bonusHours].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("bonus-list").innerHTML=bonuses.length?bonuses.map(b=>{
+    const mod=M[b.moduleId];
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="font-size:12px;font-weight:600;color:#4caf50;font-family:'DM Mono',monospace">+${b.hours}h</span>
+      <span style="flex:1;font-size:11px">${mod?.name||b.moduleId} · ${fmtL(b.date)}</span>
+      <button onclick="deleteBonus('${b.id}')" style="padding:2px 7px;border-radius:6px;border:1px solid rgba(255,80,80,.25);background:rgba(255,80,80,.08);color:#f07070;font-size:10px">✕</button>
+    </div>`;
+  }).join(""):`<div style="font-size:11px;color:#555">Noch keine Bonus-Stunden</div>`;
+
+  // Backlog list
+  const backlogs=prog.weeklyReckoning.sort((a,b)=>b.weekMon.localeCompare(a.weekMon));
+  document.getElementById("backlog-list").innerHTML=backlogs.length?backlogs.map(r=>{
+    const mod=M[r.moduleId];
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="font-size:12px;font-weight:600;color:#ff6b6b;font-family:'DM Mono',monospace">−${r.backlogH}h</span>
+      <div style="flex:1"><div style="font-size:11px">${mod?.name||r.moduleId}</div><div style="font-size:9px;color:#555">Woche vom ${fmtS(r.weekMon)}${r.pufferUsedH>0?` · ${r.pufferUsedH}h Puffer aufgebraucht`:""}</div></div>
+    </div>`;
+  }).join(""):`<div style="font-size:11px;color:#555">Noch keine Rückstände aus vergangenen Wochen</div>`;
+}
+
+function setExtraTime(iso,hours){
+  // Remove existing entry for this date, add new one
+  const filtered=prog.extraTimes.filter(e=>e.targetDate!==iso);
+  if(hours>0) filtered.push({id:uid(),targetDate:iso,hours,label:"Überfällig"});
+  prog={...prog,extraTimes:filtered};saveProg();render();
+}
+
+function addBonus(){
+  const modId=document.getElementById("bonus-mod")?.value;
+  const h=parseFloat(document.getElementById("bonus-h")?.value||"0");
+  if(!modId||h<=0){alert("Modul und Stunden angeben.");return;}
+  prog={...prog,bonusHours:[...prog.bonusHours,{id:uid(),moduleId:modId,hours:h,date:TODAY}]};
+  if(document.getElementById("bonus-h"))document.getElementById("bonus-h").value="";
+  saveProg();render();
+}
+function deleteBonus(id){prog={...prog,bonusHours:prog.bonusHours.filter(b=>b.id!==id)};saveProg();render();}
+
+function renderMathe(){
+  document.getElementById("mathe-total").textContent=matheTotal()+"h";
+  const entries=[...prog.matheEntries].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("mathe-log").innerHTML=entries.length===0
+    ?`<div style="text-align:center;color:#555;font-size:12px;padding:30px 0">Noch keine Einträge</div>`
+    :entries.map(e=>`<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:17px;font-weight:700;color:#7dc860;font-family:'DM Mono',monospace;flex-shrink:0">${e.hours}h</div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:500">${fmtL(e.date)}</div><div style="font-size:10px;color:#8888aa">${e.mode==="zusatz"?"Zusätzlich":"Statt: "+e.replacedTask+" (−"+e.replacedHours+"h)"}</div></div>
+        <button onclick="deleteMathe('${e.id}')" style="padding:2px 7px;border-radius:6px;border:1px solid rgba(255,80,80,.25);background:rgba(255,80,80,.08);color:#f07070;font-size:10px">✕</button>
+      </div>`).join("");
+}
+
+function renderTransfer(){
+  const entries=[...prog.transfers].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("transfer-log").innerHTML=entries.length===0
+    ?`<div style="text-align:center;color:#555;font-size:12px;padding:30px 0">Noch keine Übertragungen</div>`
+    :entries.map(t=>{const fm=M[t.from],tm=M[t.to];return`<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      <div style="flex:1"><div style="font-size:12px;font-weight:500">${fm?.name||t.from} → ${tm?.name||t.to}</div><div style="font-size:10px;color:#8888aa">${t.hours}h ${t.type==="puf"?"Puffer":"Regulär"} · ${fmtL(t.date)}</div></div>
+      <button onclick="deleteTransfer('${t.id}')" style="padding:2px 7px;border-radius:6px;border:1px solid rgba(255,80,80,.25);background:rgba(255,80,80,.08);color:#f07070;font-size:10px">✕</button>
+    </div>`;}).join("");
+}
+
+function renderCustom(){
+  document.getElementById("custom-projects-list").innerHTML=prog.customProjects.length===0
+    ?`<div style="text-align:center;color:#555;font-size:12px;padding:20px 0">Noch keine eigenen Projekte</div>`
+    :prog.customProjects.map(p=>{
+      const pr=prog[p.id]||{};const logged=pr.hoursLogged||0;const tot=p.reg+p.puf;const pct=tot>0?Math.round(logged/tot*100):0;
+      return`<div class="goal-card" style="border-color:${p.col}33">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${p.col};flex-shrink:0"></div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600;color:${p.col}">${p.name}</div><div style="font-size:10px;color:#8888aa">${p.reg}h${p.puf>0?` + ${p.puf}h Puffer`:""}${p.dl?` · bis ${fmtL(p.dl)}`:""}</div></div>
+          <button class="log-btn" onclick="openModal('${p.id}',${logged})">+ Std</button>
+          <button class="icon-btn" onclick="deleteCustomProject('${p.id}')">🗑</button>
+        </div>
+        <div class="bar-wrap"><div class="bar-reg" style="width:${Math.min(pct,100)}%;background:${p.col}"></div></div>
+        <div style="font-size:9px;color:#8888aa;display:flex;justify-content:space-between">
+          <span style="font-family:'DM Mono',monospace">${logged}h / ${tot}h</span>
+          <span style="color:${pct>=100?"#4caf50":pct>=50?"#FFB700":"#8888aa"}">${pct}%</span>
+        </div></div>`;}).join("");
+}
+
+// ─── PUFFER SLIDER ────────────────────────────────────────────────────────────
+function setPufActivated(id,val){const p=prog[id]||{};prog={...prog,[id]:{...p,pufActivated:val,pufActive:val>0}};saveProg();render();}
+
+// ─── MATHE MODAL ──────────────────────────────────────────────────────────────
+let matheDraft={};
+function openMatheModal(){matheDraft={};renderMM(1);document.getElementById("mathe-modal").classList.add("open");}
+function closeMatheModal(){document.getElementById("mathe-modal").classList.remove("open");}
+function renderMM(step){
+  const c=document.getElementById("mm-content");
+  if(step===1){c.innerHTML=`<div style="font-size:15px;font-weight:600;margin-bottom:12px">📐 Mathe eintragen</div>
+    <label class="m-label">Datum</label><input class="m-input" type="date" id="mm-date" value="${TODAY}" style="color-scheme:dark">
+    <label class="m-label">Stunden</label><input class="m-input" type="number" id="mm-hours" min="0.5" max="12" step="0.5" placeholder="z.B. 2">
+    <div class="m-btns"><button class="m-cancel" onclick="closeMatheModal()">Abbrechen</button><button class="m-save" onclick="mmStep2()">Weiter →</button></div>`;}
+  else if(step===2){c.innerHTML=`<div style="font-size:15px;font-weight:600;margin-bottom:4px">Wie gemacht?</div>
+    <div style="font-size:11px;color:#8888aa;margin-bottom:12px">${fmtL(matheDraft.date)} · ${matheDraft.hours}h</div>
+    <button class="m-option-btn" onclick="matheFinish('zusatz')"><div style="font-weight:600">✅ Zusätzlich</div><div style="font-size:11px;color:#8888aa;margin-top:2px">Mathe extra gemacht</div></button>
+    <button class="m-option-btn" onclick="mmStep3()"><div style="font-weight:600">🔄 Statt einer anderen Aufgabe</div></button>
+    <button class="m-cancel" style="width:100%;padding:9px;border-radius:8px;margin-top:4px" onclick="renderMM(1)">← Zurück</button>`;}
+  else if(step===3){
+    const tasks=FS[matheDraft.date]||[];
+    if(!tasks.length){c.innerHTML=`<div style="color:#f07070;margin-bottom:12px;font-size:13px">Keine Aufgaben an diesem Tag.</div><button class="m-cancel" style="width:100%;padding:9px;border-radius:8px" onclick="renderMM(2)">← Zurück</button>`;return;}
+    c.innerHTML=`<div style="font-size:15px;font-weight:600;margin-bottom:12px">Welche Aufgabe?</div>
+    <select class="m-select" id="mm-task">${tasks.map(([t,h])=>`<option value="${t}|${h}">${t} (${h}h)</option>`).join("")}</select>
+    <label class="m-label">Stunden davon durch Mathe ersetzt</label>
+    <input class="m-input" type="number" id="mm-rh" min="0.5" step="0.5" placeholder="z.B. 2">
+    <div class="m-btns"><button class="m-cancel" onclick="renderMM(2)">← Zurück</button><button class="m-save" onclick="matheFinishErsatz()">Speichern</button></div>`;
+  }
+}
+function mmStep2(){const date=document.getElementById("mm-date").value;const h=parseFloat(document.getElementById("mm-hours").value);if(!date||!h||h<=0){alert("Datum und Stunden angeben.");return;}matheDraft={date,hours:h};renderMM(2);}
+function mmStep3(){renderMM(3);}
+function matheFinish(mode){prog={...prog,matheEntries:[...prog.matheEntries,{id:uid(),date:matheDraft.date,hours:matheDraft.hours,mode}]};saveProg();closeMatheModal();render();}
+function matheFinishErsatz(){
+  const[taskName,maxH]=document.getElementById("mm-task").value.split("|");
+  const rh=parseFloat(document.getElementById("mm-rh").value);
+  if(!rh||rh<=0){alert("Stunden angeben.");return;}
+  if(rh>parseFloat(maxH)){alert(`Max ${maxH}h für diese Aufgabe.`);return;}
+  prog={...prog,matheEntries:[...prog.matheEntries,{id:uid(),date:matheDraft.date,hours:matheDraft.hours,mode:"ersatz",replacedTask:taskName,replacedHours:rh}]};
+  saveProg();closeMatheModal();render();
+}
+function deleteMathe(id){prog={...prog,matheEntries:prog.matheEntries.filter(e=>e.id!==id)};saveProg();render();}
+
+// ─── TRANSFER MODAL ───────────────────────────────────────────────────────────
+function openTransferModal(){
+  const opts=Object.values(M).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  document.getElementById("tm-content").innerHTML=`
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">🔄 Stunden übertragen</div>
+    <label class="m-label">Von</label><select class="m-select" id="tm-from">${opts}</select>
+    <label class="m-label">Nach</label><select class="m-select" id="tm-to">${opts}</select>
+    <label class="m-label">Typ</label>
+    <select class="m-select" id="tm-type"><option value="reg">Reguläre Stunden</option><option value="puf">Pufferstunden</option></select>
+    <label class="m-label">Stunden</label><input class="m-input" type="number" id="tm-hours" min="0.5" step="0.5" placeholder="z.B. 3">
+    <div class="m-btns"><button class="m-cancel" onclick="closeTransferModal()">Abbrechen</button><button class="m-save" onclick="doTransfer()">Übertragen</button></div>`;
+  document.getElementById("transfer-modal").classList.add("open");
+}
+function closeTransferModal(){document.getElementById("transfer-modal").classList.remove("open");}
+function doTransfer(){
+  const from=document.getElementById("tm-from").value,to=document.getElementById("tm-to").value;
+  const type=document.getElementById("tm-type").value,h=parseFloat(document.getElementById("tm-hours").value);
+  if(!h||h<=0){alert("Stunden angeben.");return;}if(from===to){alert("Quelle und Ziel verschieden.");return;}
+  prog={...prog,transfers:[...prog.transfers,{id:uid(),from,to,hours:h,type,date:TODAY}]};saveProg();closeTransferModal();render();
+}
+function deleteTransfer(id){prog={...prog,transfers:prog.transfers.filter(t=>t.id!==id)};saveProg();render();}
+
+// ─── NEW PROJECT MODAL ────────────────────────────────────────────────────────
+const PRESET_COLORS=["#CECBF6","#5DCAA5","#F4C0D1","#FAC775","#B5D4F4","#F0997B","#9FE1CB","#378ADD","#D3D1C7","#F7C1C1","#cc88ff","#FFB700"];
+let selectedColor=PRESET_COLORS[0];
+function openNewProjectModal(){selectedColor=PRESET_COLORS[0];renderPM();document.getElementById("project-modal").classList.add("open");}
+function closeProjectModal(){document.getElementById("project-modal").classList.remove("open");}
+function renderPM(){
+  document.getElementById("pm-content").innerHTML=`
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">＋ Neues Projekt</div>
+    <label class="m-label">Name</label><input class="m-input" type="text" id="pm-name" placeholder="z.B. Statistik">
+    <label class="m-label">Reguläre Stunden</label><input class="m-input" type="number" id="pm-reg" min="1" step="1" placeholder="z.B. 20">
+    <label class="m-label">Puffer (optional)</label><input class="m-input" type="number" id="pm-puf" min="0" step="1" placeholder="0" value="0">
+    <label class="m-label">Deadline (optional)</label><input class="m-input" type="date" id="pm-dl" style="color-scheme:dark">
+    <label class="m-label">Farbe</label>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px" id="pm-colors">
+      ${PRESET_COLORS.map(c=>`<div onclick="selectColor('${c}')" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===selectedColor?"#fff":"transparent"}" id="pc-${c.replace('#','')}">`).join("")}
+    </div>
+    <div class="m-btns"><button class="m-cancel" onclick="closeProjectModal()">Abbrechen</button><button class="m-save" onclick="createProject()">Erstellen</button></div>`;
+}
+function selectColor(c){selectedColor=c;document.querySelectorAll("[id^='pc-']").forEach(el=>el.style.border="2px solid transparent");const el=document.getElementById("pc-"+c.replace("#",""));if(el)el.style.border="2px solid #fff";}
+function createProject(){
+  const name=document.getElementById("pm-name").value.trim();const reg=parseFloat(document.getElementById("pm-reg").value)||0;
+  const puf=parseFloat(document.getElementById("pm-puf").value)||0;const dl=document.getElementById("pm-dl").value||null;
+  if(!name||reg<=0){alert("Name und Stunden Pflicht.");return;}
+  const id="custom_"+uid();prog={...prog,customProjects:[...prog.customProjects,{id,name,col:selectedColor,tc:"#111",reg,puf,dl}]};
+  saveProg();closeProjectModal();render();
+}
+function deleteCustomProject(id){
+  if(!confirm("Projekt löschen?"))return;
+  prog={...prog,customProjects:prog.customProjects.filter(p=>p.id!==id)};
+  delete prog[id];prog.transfers=prog.transfers.filter(t=>t.from!==id&&t.to!==id);
+  saveProg();render();
+}
+
+// ─── ADD HOURS MODAL ──────────────────────────────────────────────────────────
+function openAddHoursModal(){
+  const opts=Object.values(M).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  document.getElementById("ah-content").innerHTML=`
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">＋ Stunden hinzufügen</div>
+    <p style="font-size:11px;color:#8888aa;margin-bottom:12px">Erweitert das Budget eines Moduls.</p>
+    <label class="m-label">Modul</label><select class="m-select" id="ah-mod">${opts}</select>
+    <label class="m-label">Typ</label>
+    <select class="m-select" id="ah-type"><option value="reg">Reguläre Stunden</option><option value="puf">Pufferstunden</option></select>
+    <label class="m-label">Stunden</label><input class="m-input" type="number" id="ah-hours" min="0.5" step="0.5" placeholder="z.B. 5">
+    <div class="m-btns"><button class="m-cancel" onclick="closeAddHoursModal()">Abbrechen</button><button class="m-save" onclick="doAddHours()">Hinzufügen</button></div>`;
+  document.getElementById("addhours-modal").classList.add("open");
+}
+function closeAddHoursModal(){document.getElementById("addhours-modal").classList.remove("open");}
+function doAddHours(){
+  const id=document.getElementById("ah-mod").value,type=document.getElementById("ah-type").value;
+  const h=parseFloat(document.getElementById("ah-hours").value);
+  if(!h||h<=0){alert("Stunden angeben.");return;}
+  const p=prog[id]||{};
+  prog={...prog,[id]:type==="reg"?{...p,extraReg:(p.extraReg||0)+h}:{...p,extraPuf:(p.extraPuf||0)+h}};
+  saveProg();closeAddHoursModal();render();
+}
+
+// ─── GENERIC LOG MODAL ────────────────────────────────────────────────────────
+function toggleDone(id){const m=M[id];if(!m||m.grp==="static")return;const p=prog[id]||{};const nd=!p.done;const{reg,puf}=effectiveBudget(id);prog={...prog,[id]:{...p,done:nd,hoursLogged:nd?reg+puf:(p.hoursLogged||0)}};saveProg();render();}
+function openModal(id,logged){
+  const m=M[id];if(!m)return;modalId=id;
+  const{reg,puf}=effectiveBudget(id);
+  document.getElementById("modal-title").textContent=m.grp==="static"?"Fortschritt loggen":"Stunden loggen";
+  document.getElementById("modal-sub").innerHTML=`<span style="color:${m.col};font-weight:600">${m.name}</span><br>${logged}h geloggt · ${reg}h reg${puf>0?" + "+puf+"h Puf":""} = ${reg+puf}h`;
+  document.getElementById("log-input").value="";document.getElementById("save-btn").disabled=true;
+  document.getElementById("modal").classList.add("open");setTimeout(()=>document.getElementById("log-input").focus(),50);
+}
+function closeModal(){document.getElementById("modal").classList.remove("open");modalId=null;}
+function updateSave(){document.getElementById("save-btn").disabled=!(parseFloat(document.getElementById("log-input").value)>0);}
+function doLog(){
+  if(!modalId)return;const h=parseFloat(document.getElementById("log-input").value)||0;if(h<=0)return;
+  const m=M[modalId];const p=prog[modalId]||{};const newL=(p.hoursLogged||0)+h;
+  const{reg,puf}=effectiveBudget(modalId);const tot=reg+puf;
+  prog={...prog,[modalId]:{...p,hoursLogged:newL,done:m.grp!=="static"&&newL>=tot,pufActive:p.pufActive||(newL>reg&&puf>0),extended:newL>tot}};
+  saveProg();closeModal();render();
+}
+
+function changeWeek(n){wkOff+=n;render();}
+function goToday(){wkOff=0;render();}
+function showTab(id,btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  if(btn)btn.classList.add("active");document.getElementById("page-"+id).classList.add("active");
+}
+document.getElementById("log-input").addEventListener("input",updateSave);
+document.getElementById("log-input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!document.getElementById("save-btn").disabled)doLog();});
+
+// Initial cloud load (silent, non-blocking)
+(async()=>{
+  if(!jbId){render();return;}
+  const cloud=await cloudPull();
+  if(cloud&&typeof cloud==="object"){
+    const localH=Object.values(prog).reduce((s,v)=>s+(v?.hoursLogged||0),0);
+    const cloudH=Object.values(cloud).reduce((s,v)=>s+(v?.hoursLogged||0),0);
+    if(cloudH>localH){
+      prog=cloud;ensureArrays();localStorage.setItem("st26v8",JSON.stringify(prog));rebuildM();
+    }
+  }
+  render();
+})();
+render();
+</script>
+</body>
+</html>
